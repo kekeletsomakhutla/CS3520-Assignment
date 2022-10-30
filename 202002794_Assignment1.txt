@@ -1,0 +1,122 @@
+#Author:		Kekeletso Makhutla 
+
+#ID:			202002794
+
+#Current Date:		28/ 10/ 2022
+
+#description:		Reversible Prime Squares
+
+#Pseudocode :
+#convention: 	$s0 for count  $s1 for input  r for array	
+#---------------------------------------------------------------------------------
+
+		.data
+result:		.asciiz		" is a reversible prime square\n"
+int2str:		.space		4096
+		
+		.text
+main:
+		li 		$s0, 0
+		li 		$s1, 0
+		
+		done
+loop:
+		move 		$a0, $s1
+		jal		IsPrime
+IsPrime: 	
+		sub		$sp, $sp, 20
+		sw		$ar, 16($sp)
+		sw		$a0, 12($sp)	
+		
+		lw		$t0, 12($sp)
+		blu		$t0, 10, num1
+		li 		$t1, 2
+		b		continue
+num1:
+		blu		$t0, 100, num2
+		li		$t1, 3
+		b		continue
+num2:
+ 		blu		$t0, 1000, num3
+		li		$t1, 4
+		b		continue
+num3:
+		bge		$t0, 1000, num4
+num4:
+		li		t1, 5
+		b		continue
+continue:
+		la 		$a0, $s0
+		la		$a1, int2str
+		jal		int_to_string		#MIPS assembly version of C's gcvt()
+		
+		la		$a0, int2str		
+		jal		strlen
+		add		&t4, $zero, $v0
+
+		jal		string_reverse		#MIPS assembly code for reversing a string
+
+int_to_string:
+		addi		$sp, $sp, -4
+		sw		$t0, ($sp)
+		j		next0
+next0:
+		li 		$t0, -1
+		addi		$sp, $sp, -4
+		sw 		$t0, ($sp)
+push_digits:
+		blez		$a0, next1
+		li		$t0, 10
+		div		$a0, $t0
+		mfhi		$t0
+		mflo		$a0
+		addi		$sp, $sp, -4
+		sw		$t0, ($sp)
+		j		push_digits 
+next1:
+		lw		$t0, '0'
+		addi		$sp, $sp, 4
+		
+		bltz		$t0, neg_digit
+		j 		pop_digits
+
+neg_digit:
+		li		 $t0, '0'
+		sb		$t0, ($a1)
+		addi		$a1, $a1, 1
+		j		next2
+pop_digits:
+		bltz		$t0, next2
+		addi		$t0, $t0, '0'
+		sb		$t0, ($sp)
+		addi		$a1, $a1, 1
+		lw		$t0, ($sp)
+		addi		$sp, $sp, 4
+		j		pop_digits
+next2:
+		sb		$zero, ($a1)
+		lw		$t0, ($sp)
+		addi		$sp, $sp, 4
+		jr		$ra
+
+string_reverse:
+		li		$t0, 0
+		li		$t3, 0
+
+		reverse_loop:
+				and	$t3, $t2, $t0
+				Ib	$t4, 0($t3)
+				beqz	$t4, exit
+				sb	$t4, output($t1)
+				subi	$t1, $t1, 1
+				addi	$t0, $t0, 1
+				j	reverse_loop
+
+exit:
+		li		$v0, 4
+		la		$a0, output
+		syscall
+
+		li		$v0, 10
+		syscall 	
+			
